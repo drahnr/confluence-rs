@@ -25,6 +25,8 @@ extern crate xml;
 extern crate xmltree;
 extern crate chrono;
 
+extern crate mime;
+
 pub mod http;
 pub mod wsdl;
 pub mod rpser;
@@ -83,7 +85,7 @@ impl Session {
 
         debug!("getting wsdl from url {:?}", wsdl_url);
 
-        let wsdl = try!(wsdl::fetch(&wsdl_url));
+        let wsdl = wsdl::fetch(&wsdl_url)?;
         let mut session = Session { wsdl: wsdl, token: String::new() };
 
         let response = try!(session.call(
@@ -92,7 +94,7 @@ impl Session {
                 .with(Element::node("password").with_text(pass))
         ));
 
-        let token = match try!(response.body.descend(&["loginReturn"])).text {
+        let token = match response.body.descend(&["loginReturn"])?.text {
             Some(token) => token,
             _ => return Err(Error::ReceivedNoLoginToken),
         };
@@ -112,7 +114,7 @@ impl Session {
                 .with(Element::node("token").with_text(self.token.clone()))
         ));
 
-        Ok(match try!(response.body.descend(&["logoutReturn"])).text {
+        Ok(match response.body.descend(&["logoutReturn"])?.text {
             Some(ref v) if v == "true" => {
                 debug!("logged out successfully");
                 true
@@ -150,9 +152,9 @@ impl Session {
                 .with(Element::node("spaceKey").with_text(space_key))
         ));
 
-        let element = try!(response.body.descend(&["getSpaceReturn"]));
+        let element = response.body.descend(&["getSpaceReturn"])?;
 
-        Ok(try!(Space::from_element(element)))
+        Ok(Space::from_element(element))?
     }
 
     /**
@@ -178,9 +180,9 @@ impl Session {
                 .with(Element::node("pageTitle").with_text(page_title))
         ));
 
-        let element = try!(response.body.descend(&["getPageReturn"]));
+        let element = response.body.descend(&["getPageReturn"])?;
 
-        Ok(try!(Page::from_element(element)))
+        Ok(Page::from_element(element))?
     }
 
     /**
@@ -205,9 +207,9 @@ impl Session {
                 .with(Element::node("pageId").with_text(page_id.to_string()))
         ));
 
-        let element = try!(response.body.descend(&["getPageReturn"]));
+        let element = response.body.descend(&["getPageReturn"])?;
 
-        Ok(try!(Page::from_element(element)))
+        Ok(Page::from_element(element))?
     }
 
     /**
@@ -303,9 +305,9 @@ impl Session {
                 )
         ));
 
-        let element = try!(response.body.descend(&["storePageReturn"]));
+        let element = response.body.descend(&["storePageReturn"])?;
 
-        Ok(try!(Page::from_element(element)))
+        Ok(Page::from_element(element))?
     }
 
     /**
@@ -364,9 +366,9 @@ impl Session {
                 )
         ));
 
-        let element = try!(response.body.descend(&["updatePageReturn"]));
+        let element = response.body.descend(&["updatePageReturn"])?;
 
-        Ok(try!(Page::from_element(element)))
+        Ok(Page::from_element(element))?
     }
 
     /**
@@ -391,12 +393,12 @@ impl Session {
                 .with(Element::node("pageId").with_text(page_id.to_string()))
         ));
 
-        let element = try!(response.body.descend(&["getChildrenReturn"]));
+        let element = response.body.descend(&["getChildrenReturn"])?;
 
         let mut summaries = vec![];
 
         for element in element.children {
-            summaries.push(try!(PageSummary::from_element(element)));
+            summaries.push(PageSummary::from_element(element)?);
         }
 
         Ok(summaries)
@@ -440,11 +442,11 @@ impl Session {
             trace!("[method xml] {}", envelope);
         }
 
-        let http_response = try!(http::soap_action(url, &method.name, &envelope));
+        let http_response = http::soap_action(url, &method.name, &envelope)?;
 
         trace!("[response xml] {}", http_response.body);
 
-        Ok(try!(rpser::Response::from_xml(&http_response.body)))
+        Ok(rpser::Response::from_xml(&http_response.body))?
     }
 }
 

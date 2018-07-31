@@ -99,6 +99,9 @@ impl BuildElement for Element {
             attributes: self.attributes.clone(),
             children: self.children.iter().map(|child| child.cloned()).collect(),
             text: self.text.clone(),
+            namespace: None,
+            namespaces: None,
+            prefix: None,
         }
     }
 
@@ -108,6 +111,9 @@ impl BuildElement for Element {
             attributes: HashMap::new(),
             children: Vec::new(),
             text: None,
+            namespace: None,
+            namespaces: None,
+            prefix: None,
         }
     }
 

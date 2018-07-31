@@ -20,10 +20,10 @@ pub struct Response {
 /// Perform a GET request to specified URL.
 pub fn get(url: &str) -> Result<Response> {
     let client = Client::new();
-    let mut response = try!(client.get(url).send());
+    let mut response = client.get(url).send()?;
 
     let mut body = String::new();
-    try!(response.read_to_string(&mut body));
+    response.read_to_string(&mut body)?;
 
     Ok(Response {
         status: response.status,
@@ -44,7 +44,7 @@ pub fn soap_action(url: &str, action: &str, xml: &str) -> Result<Response> {
     );
 
     let mut body = String::new();
-    try!(response.read_to_string(&mut body));
+    response.read_to_string(&mut body)?;
 
     Ok(Response {
         status: response.status,
